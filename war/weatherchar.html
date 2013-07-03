@@ -4,8 +4,20 @@
 <script src="/js/highcharts.js"></script>
 </head>
 <body>
+<div id="stationChoice">
+<select id="county" onchange=hello();>
+  <option value="">Select Station</option>
+  <option value="Alachua">Alachua</option>
+  <option value="Apopka">Apopka</option>
+
+</select>
+</div>
 <div id="container" style="width:50%; height:400px;"></div>
 <script>
+function hello(){
+var station=$("#county").val();
+alert(station);
+}
 $(document).ready(function() {
     var chart1 = new Highcharts.Chart({
        chart: {
