@@ -1,0 +1,43 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="/js/highcharts.js"></script>
+</head>
+<body>
+<div id="container" style="width:50%; height:400px;"></div>
+<script>
+$(document).ready(function() {
+    var chart1 = new Highcharts.Chart({
+       chart: {
+         renderTo: 'container',
+         defaultSeriesType: 'line'
+      },
+      title: {
+         text: 'Fruit Consumption'
+      },
+      xAxis: {
+        
+             labels: {
+        formatter: function() {
+            return this.value + ' p';
+        }
+    },
+      },
+
+      yAxis: {
+         title: {
+            text: 'Fruit eaten'
+         }
+      },
+      series: [{
+         name: 'Anne',
+         data: [1, 0, 4]
+      }, {
+         name: 'Martin',
+         data: [5, 7, 3]
+        }]
+    });
+});
+</script>
+</body>
+</html>
