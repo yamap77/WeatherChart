@@ -7,25 +7,38 @@
 <div id="stationChoice">
 <select id="county" onchange=hello();>
   <option value="">Select Station</option>
-  <option value="Alachua">Alachua</option>
-  <option value="Apopka">Apopka</option>
+  <option value="0">Alachua</option>
+  <option value="1">Apopka</option>
 
 </select>
 </div>
 <div id="container" style="width:50%; height:400px;"></div>
 <script>
+var fawn;
+var nws;
 function hello(){
 var station=$("#county").val();
-alert(station);
+   $.ajax({
+   		url: "/station",
+   		type: "Post",
+   		data: {"station": station},
+   		success: function(data) {
+   		var stData=data.station
+   		fawn=stData[station].fawn;
+   		nws=stData[station].nws;
+   		displayChart();
+   		}
+   });
+   
 }
-$(document).ready(function() {
+function displayChart() {
     var chart1 = new Highcharts.Chart({
        chart: {
          renderTo: 'container',
          defaultSeriesType: 'line'
       },
       title: {
-         text: 'Fruit Consumption'
+         text: 'Forecast'
       },
       xAxis: {
         
@@ -38,18 +51,18 @@ $(document).ready(function() {
 
       yAxis: {
          title: {
-            text: 'Fruit eaten'
+            text: 'F'
          }
       },
       series: [{
-         name: 'Anne',
-         data: [1, 0, 4]
+         name: 'FAWN Observation',
+         data: fawn
       }, {
-         name: 'Martin',
-         data: [5, 7, 3]
+         name: 'NWS Forecast',
+         data: nws
         }]
     });
-});
+};
 </script>
 </body>
 </html>
