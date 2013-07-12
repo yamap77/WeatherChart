@@ -99,10 +99,10 @@ var cell1=row.insertCell(0);
 var cell2=row.insertCell(1);
 var cell3=row.insertCell(2);
 var cell4=row.insertCell(3);
-cell1.innerHTML="1p";
-cell2.innerHTML=80;
-cell3.innerHTML=75; 
-cell4.innerHTML=5;     
+cell1.innerHTML=(fawn[i][0]+1)+"p";
+cell2.innerHTML=fawn[i][1];
+cell3.innerHTML=nws[i][1];; 
+cell4.innerHTML=fawn[i][1]-nws[i][1];     
 }
 }
 function targetPoint(){
