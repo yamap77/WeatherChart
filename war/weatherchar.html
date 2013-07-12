@@ -2,37 +2,54 @@
 <head>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script src="/js/highcharts.js"></script>
+<link type="text/css" rel="stylesheet" href="/stylesheet/bootstrap.min.css" />
+<link type="text/css" rel="stylesheet" href="/stylesheet/zhaostyle.css" />
 </head>
 <body>
-<div id="stationChoice">
-<select id="county" onchange=hello();>
+<div id="stationChoice" class="span5" style="padding-top: 30px;">Fawn Station:
+<select id="county" onchange=getData();>
   <option value="">Select Station</option>
   <option value="0">Alachua</option>
   <option value="1">Apopka</option>
-
 </select>
+Critical Temperature:
+<select id="critical" onchange=displayCritical();></select>
 </div>
+<div class="span5 scrollWrapper" style="padding-top: 30px;"> 
+<table id="forecast" class="table table-bordered" onclick=choose(); >
+   <tr>
+    <th>Time</th>
+    <th>NWS</th>
+    <th>Fawn</th>
+    <th>Diff</th>
+   </tr>
+  
+</table></div>
 <div id="container" style="width:50%; height:400px;"></div>
 <script>
+function choose(){
+$(document).ready(function() {
+            $("#forecast tr").click(function() {
+                $.each($("#forecast tr"), function(i, n) {
+                    $(n).removeClass("selected");
+                });
+                $(this).addClass("selected");
+            });
+        });
+
+        };
+
+var options = "";
+for(var i = 100; i>=0; i-- ) {
+    options += "<option value="+i+">"+i+"</option>";
+}
+document.getElementById('critical').innerHTML = options;
+
 var fawn;
 var nws;
-function hello(){
-var station=$("#county").val();
-   $.ajax({
-   		url: "/station",
-   		type: "Post",
-   		data: {"station": station},
-   		success: function(data) {
-   		var stData=data.station
-   		fawn=stData[station].fawn;
-   		nws=stData[station].nws;
-   		displayChart();
-   		}
-   });
-   
-}
-function displayChart() {
-    var chart1 = new Highcharts.Chart({
+var chart1;
+$( document ).ready(function() {
+       chart1 = new Highcharts.Chart({
        chart: {
          renderTo: 'container',
          defaultSeriesType: 'line'
@@ -53,16 +70,96 @@ function displayChart() {
          title: {
             text: 'F'
          }
+      }
+      });
+})
+function getData(){
+var station=$("#county").val();
+   $.ajax({
+   		url: "/station",
+   		type: "Post",
+   		data: {"station": station},
+   		success: function(data) {
+   		var stData=data.station
+   		fawn=stData[station].fawn;
+   		nws=stData[station].nws;
+   		fillTable();	
+   		displayChart();
+   		}
+   });
+   
+}
+function fillTable(){
+var row="";
+var length=fawn.length;
+var table=document.getElementById("forecast");
+for(var i=0;i<length;i++){
+var row=table.insertRow(i+1);
+var cell1=row.insertCell(0);
+var cell2=row.insertCell(1);
+var cell3=row.insertCell(2);
+var cell4=row.insertCell(3);
+cell1.innerHTML="1p";
+cell2.innerHTML=80;
+cell3.innerHTML=75; 
+cell4.innerHTML=5;     
+}
+}
+function targetPoint(){
+
+}
+function displayChart(){
+       var xlables=["1p","3p","5p","7p","9p","11p","1a","3a","5a","7a","9a","11a"];
+       chart1 = new Highcharts.Chart({
+       chart: {
+         renderTo: 'container',
+         defaultSeriesType: 'line'
       },
-      series: [{
+      title: {
+         text: 'Forecast'
+      },
+      xAxis: {
+      categories:["1p","2p","3p","4p","5p","6p","7p","8p","9p","10p","11p","12a","1a","2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","12p"]   
+          
+      },
+
+      yAxis: {
+         title: {
+            text: 'F'
+         }
+      }
+      });
+var series =[{
          name: 'FAWN Observation',
          data: fawn
-      }, {
-         name: 'NWS Forecast',
-         data: nws
-        }]
-    });
-};
+      },
+      {name: 'NWS Forecast',
+         data: nws}];
+       for(var i=0;i<series.length;i++){
+         chart1.addSeries(series[i]);
+         }      
+}
+function displayCritical(){
+var critical=$("#critical").val();
+var ct=[];
+for(var i=0;i<5;i++){
+ct[i]=parseInt(critical);
+}
+var flag=chart1.get(1);
+var series={
+id: 1,
+name:'Critical Temperature',
+data: ct};
+if(flag!=null){
+chart1.get(1).update({
+data:ct
+});
+}
+else{
+
+chart1.addSeries(series);
+}
+}
 </script>
 </body>
 </html>

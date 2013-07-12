@@ -1,0 +1,51 @@
+.margin1{
+	margin:50px 350px 50px 50px;
+	margin:15px 20px 15px;
+}
+.margin2{
+	text-align:left;
+	color : red;
+	margin-bottom: 15px;
+}
+.pagecolor{
+	background-color:#49afcd;
+}
+.borderzhao{
+	border: 2px solid #ddd; 
+	background-color:white;
+}
+
+h1 {
+	text-align: center;
+	color : #006DCC; 
+}
+
+.margin3{
+	text-align:center;
+}
+
+.legend{
+	text-align:center;
+	color: #006DCC;
+	font-weight: bold;
+}
+
+.welcomecolor{
+	color: #FFFF00;
+}
+.my-error-class{
+	color:red;
+
+	}
+.selected{
+	background-color:#99FFFF
+
+	}
+.scrollWrapper{
+
+  height:100px;
+  width:250px;
+  overflow:scroll;
+}
+}
+}
