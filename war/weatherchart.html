@@ -1,0 +1,376 @@
+<!doctype html>
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="/js/highcharts.js"></script>
+<link type="text/css" rel="stylesheet" href="/stylesheet/bootstrap.min.css" />
+<link type="text/css" rel="stylesheet" href="/stylesheet/zhaostyle.css" />
+</head>
+<body>
+<div class="span12">
+<div class="row">
+<div id="stationChoice" class="span3" style="padding-top: 30px;">
+<label>Fawn Station:<label>
+<select id="county" onchange=getData();>
+  <option value="">Select Station</option>
+  <option value="260">Alachua</option>
+  <option value="320">Apopka</option>
+  <option value="490">Arcadia</option>
+  <option value="304">Avalon</option>
+  <option value="350">Balm</option>
+  <option value="410">Belle Glade</option>
+  <option value="230">Bronson</option>
+  <option value="150">Carrabelle</option>
+  <option value="250">Citra</option>
+  <option value="405">Clewiston</option>
+  <option value="311">Dade City</option>
+  <option value="120">DeFuniak Springs</option>
+  <option value="360">Dover</option>
+  <option value="420">Fort Lauderdale</option>
+  <option value="390">Frostproof</option>
+  <option value="430">Fort Pierce</option>
+  <option value="270">Hastings</option>
+  <option value="440">Homestead</option>
+  <option value="450">Immokalee</option>
+  <option value="371">Indian River</option>
+  <option value="110">Jay</option>
+  <option value="241">Joshua</option>
+  <option value="340">Kenansville</option>
+  <option value="330">Lake Alfred</option>
+  <option value="275">Lecanto</option>
+  <option value="170">Live Oak</option>
+  <option value="180">Macclenny</option>
+  <option value="130">Marianna</option>
+  <option value="121">Mayo</option>
+  <option value="160">Monticello</option>
+  <option value="480">North Port</option>
+  <option value="280">Ocklawaha</option>
+  <option value="303">Okahumpka</option>
+  <option value="455">Okeechobee</option>
+  <option value="380">Ona</option>
+  <option value="460">Palmdale</option>
+  <option value="290">Pierson</option>
+  <option value="240">Putnam Hall</option>
+  <option value="140">Quincy</option>
+  <option value="470">Sebring</option>
+  <option value="302">Umatilla</option>
+  <option value="425">Wellington</option> 
+</select>
+</div>
+<div id="CriricalChoice" class="span3" style="padding-top: 30px;">
+<label>Critical Temperature:<label>
+<select id="critical" onchange=displayCritical();></select>
+</div>
+</div>
+</div>
+<div id="container" class="span9"></div>
+<div class="span6 scrollWrapper" style="padding-top: 30px;white-space:nowrap;font-size:14pt"> 
+<table id="forecast" class="table table-bordered" style="font-size:70%" onclick=choose(); >
+<thead>
+   <tr>
+    <th>Time</th>
+    <th>NWS</th>
+    <th>Fawn</th>
+    <th>Diff</th>
+    <th style="display:none;">index</th>
+   </tr>  
+   </thead>
+</table>
+</div>
+</div>
+</div>
+
+<script>
+var fawn=[];
+var nws=[];
+var chart1;
+function choose(){
+//$(document).ready(function() {
+            $("#forecast tr").click(function() {
+                $.each($("#forecast tr"), function(i, n) {
+                    $(n).removeClass("selected");
+                });
+                $(this).addClass("selected");
+                 var index = $("#forecast tr").index($(this));
+                var table=document.getElementById("forecast");
+                var col=table.rows[index].cells[4].innerHTML;
+                var dataIndex=col.split(" ");  
+                if(index>=1){
+               chart1.tooltip.refresh([chart1.series[0].data[parseInt(dataIndex[0])],chart1.series[1].data[parseInt(dataIndex[1])]]);
+         
+               }
+        
+            });
+      //  });
+
+        };
+
+var options = "";
+for(var i = 100; i>=0; i-- ) {
+    options += "<option value="+i+">"+i+"</option>";
+}
+document.getElementById('critical').innerHTML = options;
+$(document).ready(function() {
+       chart1 = new Highcharts.Chart({
+       chart: {
+         renderTo: 'container',
+         defaultSeriesType: 'line'
+      },
+      title: {
+         text: 'Forecast'
+      },
+        tooltip: {
+            shared: true
+        },
+      xAxis: {
+        
+             labels: {
+        formatter: function() {
+            return this.value + ' p';
+        }
+    },
+      },
+
+      yAxis: {
+         title: {
+            text: 'F'
+         }
+      }
+      });
+})
+var signal=0;
+function getData(){
+var fawnurl='http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/'+$("#county").val();
+var nwsurl='http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/'+$("#county").val();
+fetchfawnData(fawnurl);
+fechforecastData(nwsurl);
+
+}
+function fetchfawnData(fawnurl){
+    if ($.browser.msie && window.XDomainRequest) {
+        // Use Microsoft XDR
+        var xdr = new XDomainRequest();
+        xdr.open("get",fawnurl);
+        xdr.onload = function () {
+            var JSON = $.parseJSON(xdr.responseText);
+            if (JSON == null || typeof (JSON) == 'undefined') {
+                JSON = $.parseJSON(data.firstChild.textContent);
+            }           
+            var stnData=JSON;
+			for(var i=0;i<stnData.length;i++){
+			var temp=[];
+			var dateStr=stnData[i].local_time; //"2013-07-18 10:00:00 EDT"
+            var a=dateStr.split(" ");
+            var d=a[0].split("-");
+            var t=a[1].split(":");
+            var date = new Date(d[0],(d[1]-1),d[2],t[0],t[1],t[2]);
+			temp[0]=date.getTime();
+			temp[1]=parseInt(stnData[i].obz_temp);
+			fawn[i]=temp;
+			}
+			signal++;
+			if(signal==2){
+			fillTable();
+            displayChart();	
+            signal=0;	
+			}
+        };
+        xdr.onprogress=function(){ };
+        xdr.ontimeout=function(){ };
+        xdr.onerror=function(){ };
+        setTimeout(function(){
+        xdr.send();
+        },0);
+
+    }
+else{
+	$.getJSON(fawnurl,
+			function(data) { 
+			var stnData=data;
+			for(var i=0;i<stnData.length;i++){
+			var temp=[];
+			temp[0]=(new Date(stnData[i].local_time)).getTime();
+			temp[1]=parseInt(stnData[i].obz_temp);
+			fawn[i]=temp;
+			}
+			signal++;
+			if(signal==2){
+			fillTable();
+            displayChart();	
+            signal=0;	
+			}
+			}); 
+			}
+ 
+}
+function fechforecastData(nwsurl){
+    if ($.browser.msie && window.XDomainRequest) {
+        // Use Microsoft XDR
+        var xdr = new XDomainRequest();
+        xdr.open("get",nwsurl);
+        xdr.onload = function () {
+            var JSON = $.parseJSON(xdr.responseText);
+            if (JSON == null || typeof (JSON) == 'undefined') {
+                JSON = $.parseJSON(data.firstChild.textContent);
+            }           
+            var stnData=JSON;
+			for(var i=0;i<stnData.length;i++){
+			var temp=[];
+			var dateStr=stnData[i].local_eff_time; //"2013-07-18 10:00:00 EDT"
+            var a=dateStr.split(" ");
+            var d=a[0].split("-");
+            var t=a[1].split(":");
+            var date = new Date(d[0],(d[1]-1),d[2],t[0],t[1],t[2]);
+			temp[0]=date.getTime();
+			temp[1]=parseInt(stnData[i].fcst_temp);
+			nws[i]=temp;
+			}
+			signal++;
+			if(signal==2){
+			fillTable();
+            displayChart();	
+            signal=0;	
+			}
+        };
+        xdr.onprogress=function(){ };
+        xdr.ontimeout=function(){ };
+        xdr.onerror=function(){ };
+        setTimeout(function(){
+        xdr.send();
+        },0);
+
+    }
+else{
+	$.getJSON(nwsurl,
+			function(data) { 
+			var stnData=data;
+			for(var i=0;i<stnData.length;i++){
+			var temp=[];
+			temp[0]=(new Date(stnData[i].local_eff_time)).getTime();
+			temp[1]=parseInt(stnData[i].fcst_temp);
+			nws[i]=temp;
+			}
+			signal++;
+			if(signal==2){
+			fillTable();
+            displayChart();	
+            signal=0;	
+			}
+			}); 
+			} 
+		
+}
+function fillTable(){
+var row="";
+var length=nws.length;
+var table=document.getElementById("forecast");
+var count=0;
+var flag=0;
+var rownum=1;
+for(var i=0;i<length;i++){
+if(nws[i][0]>fawn[fawn.length-1][0])
+break;
+for(var j=count;j<fawn.length;j++){
+if(fawn[j][0]==nws[i][0]){
+count=j;
+flag=1;
+break;
+}}
+if(flag==1){
+flag=0;
+var row=table.insertRow(rownum);
+var cell1=row.insertCell(0);
+var cell2=row.insertCell(1);
+var cell3=row.insertCell(2);
+var cell4=row.insertCell(3);
+var cell5=row.insertCell(4);
+var date=new Date(fawn[count][0]);
+cell1.innerHTML=(date);
+cell2.innerHTML=fawn[count][1];
+cell3.innerHTML=nws[i][1];; 
+cell4.innerHTML=fawn[count][1]-nws[i][1];
+cell5.innerHTML=count+" "+i;
+cell5.style.display="none";
+rownum++;
+}
+}     
+}
+
+function displayChart(){
+         Highcharts.setOptions({                                          
+                global : {
+                    useUTC : false
+                }
+            });
+       chart1 = new Highcharts.Chart({
+       chart: {
+         renderTo: 'container',
+         defaultSeriesType: 'line'
+      },
+      title: {
+         text: 'Forecast'
+      },
+       tooltip: {
+            shared: true
+        },
+         xAxis: {
+         type: 'datetime',
+                //categories: timeCategories,
+                title: {
+                    text: null
+                },
+                startOnTick: false
+            },
+
+      yAxis: {
+         title: {
+            text: 'F'
+         }
+      }
+      });
+var series =[{
+         name: 'FAWN Observation',
+         data: fawn
+      },
+      {name: 'NWS Forecast',
+         data: nws}];
+       for(var i=0;i<series.length;i++){
+         chart1.addSeries(series[i]);
+         }      
+}
+function displayCritical(){
+var critical=$("#critical").val();
+var ct=[];;
+if(nws.length==0){
+for(var i=0;i<5;i++){
+ct[i]=parseInt(critical);
+}
+}
+else{
+var cpoint1=[];
+var cpoint2=[];
+cpoint1[0]=nws[0][0];;
+cpoint1[1]=parseInt(critical);
+cpoint2[0]=nws[nws.length-1][0];
+cpoint2[1]=parseInt(critical);
+ct[0]=cpoint1;
+ct[1]=cpoint2;
+}
+
+var flag=chart1.get(1);
+var series={
+id: 1,
+name:'Critical Temperature',
+data: ct};
+if(flag!=null){
+chart1.get(1).update({
+data:ct
+});
+}
+else{
+chart1.addSeries(series);
+}
+}
+</script>
+</body>
+</html>

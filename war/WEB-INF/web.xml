@@ -8,11 +8,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 		<servlet-name>WeatherChart</servlet-name>
 		<servlet-class>com.fawn.weatherchart.WeatherChartServlet</servlet-class>
 	</servlet>
-	<servlet-mapping>
-		<servlet-name>WeatherChart</servlet-name>
-		<url-pattern>station</url-pattern>
-	</servlet-mapping>
 	<welcome-file-list>
-		<welcome-file>weatherchar.html</welcome-file>
+		<welcome-file>weatherchart.html</welcome-file>
 	</welcome-file-list>
 </web-app>
