@@ -44,13 +44,7 @@ h1 {
 
 .scrollWrapper{
   height: 300px;
-  width:300px;
+  width:290px;
   overflow: scroll;
 }
-table {width:100%; border:1px solid #000000;}
-thead {text-align:center;}
-thead th {text-align:center;border-width: 1px;border-style: outset;}
-tbody {color:#000000;text-align:center; height:150px; overflow: scroll; margin:0px;}
-tbody td { height:60px; width:100px;border-width: 1px;border-style: outset;}
-}
-}
+
