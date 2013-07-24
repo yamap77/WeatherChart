@@ -11,50 +11,7 @@
 <div class="row">
 <div id="stationChoice" class="span3" style="padding-top: 30px;">
 <label>Fawn Station:<label>
-<select id="county" onchange=getData();>
-  <option value="">Select Station</option>
-  <option value="260">Alachua</option>
-  <option value="320">Apopka</option>
-  <option value="490">Arcadia</option>
-  <option value="304">Avalon</option>
-  <option value="350">Balm</option>
-  <option value="410">Belle Glade</option>
-  <option value="230">Bronson</option>
-  <option value="150">Carrabelle</option>
-  <option value="250">Citra</option>
-  <option value="405">Clewiston</option>
-  <option value="311">Dade City</option>
-  <option value="120">DeFuniak Springs</option>
-  <option value="360">Dover</option>
-  <option value="420">Fort Lauderdale</option>
-  <option value="390">Frostproof</option>
-  <option value="430">Fort Pierce</option>
-  <option value="270">Hastings</option>
-  <option value="440">Homestead</option>
-  <option value="450">Immokalee</option>
-  <option value="371">Indian River</option>
-  <option value="110">Jay</option>
-  <option value="241">Joshua</option>
-  <option value="340">Kenansville</option>
-  <option value="330">Lake Alfred</option>
-  <option value="275">Lecanto</option>
-  <option value="170">Live Oak</option>
-  <option value="180">Macclenny</option>
-  <option value="130">Marianna</option>
-  <option value="121">Mayo</option>
-  <option value="160">Monticello</option>
-  <option value="480">North Port</option>
-  <option value="280">Ocklawaha</option>
-  <option value="303">Okahumpka</option>
-  <option value="455">Okeechobee</option>
-  <option value="380">Ona</option>
-  <option value="460">Palmdale</option>
-  <option value="290">Pierson</option>
-  <option value="240">Putnam Hall</option>
-  <option value="140">Quincy</option>
-  <option value="470">Sebring</option>
-  <option value="302">Umatilla</option>
-  <option value="425">Wellington</option> 
+<select id="county" onchange=getData();> 
 </select>
 </div>
 <div id="CriricalChoice" class="span3" style="padding-top: 30px;">
@@ -83,8 +40,41 @@ var nws=[];
 var chart1;
 var forecastDate;
 var effDate;
+function getFawnStation(){
+	$.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
+			function(data) { 
+			var stnObj=data;
+			  var keys = [];
+			  var i=0;
+			  /*
+    for(var key in stnObj)
+    {
+        if(stnObj.hasOwnProperty(key))
+        {
+        alert(key);
+            keys.push(key);
+ 
+        }
+    }*/
+    keys=Object.keys(stnObj); // ['key1', 'key2', 'key3', 'key4']
+    var station=[];
+    for(var i=0;i<keys.length;i++){
+    var temp=[];
+    var key1=keys[i];
+    temp[0]=stnObj[key1].display_name;
+    temp[1]=key1;
+    station[i]=temp;}
+    station.sort(function(a, b) { return (a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0)); });
+   var stations ="";
+   stations += "<option value="+""+">Select Station</option>";
+   for(var i=0;i<station.length;i++){
+    stations += "<option value="+station[i][1]+">"+station[i][0]+"</option>";
+    }
+    document.getElementById('county').innerHTML = stations;
+			}); 
+}
+getFawnStation();
 function choose(){
-//$(document).ready(function() {
             $("#forecast tr").click(function() {
                 $.each($("#forecast tr"), function(i, n) {
                     $(n).removeClass("selected");
@@ -97,11 +87,8 @@ function choose(){
                 if(index>=1){
                chart1.tooltip.refresh([chart1.series[0].data[parseInt(dataIndex[0])],chart1.series[1].data[parseInt(dataIndex[1])]]);
          
-               }
-        
+               }       
             });
-      //  });
-
         };
 
 var options = "";
