@@ -1,3 +1,7 @@
+/*In this file. I defined a forecast function. When the page load, it will initial a chart. After the user choose a FAWN station, it will fetch temperature data and store them in fawn and nws.
+ * Then, add series in to the chart and show it in the page. In the meanwhile, the page will also display a table compare the forecast temperature and station temperature.*/
+
+
 function forecast(){
 	var fawn=[];
 	var nws=[];
@@ -14,6 +18,94 @@ function forecast(){
         var date = new Date(d[0],(d[1]-1),d[2],t[0],t[1],t[2]);
         return date;
 	}
+	//Private member function. After user choose one station, update the chart1 with fawn and nws.
+var displayChart=function(){
+		newTitle="Forecast Date:"+forecastDate+", "+"Eff Date:"+effDate;
+		chart1.setTitle({text: newTitle});
+		var stnSeries =[{
+			id:2,
+		    name: 'FAWN Observation',
+		    data: fawn
+		 },
+		 {
+			 id:3,
+			 name: 'NWS Forecast',
+		    data: nws}];
+		var length=chart1.series.length;
+		var ct=[];;
+		var cpoint1=[];
+		var cpoint2=[];
+		cpoint1[0]=nws[0][0];;
+		cpoint1[1]=parseInt(critical);
+		cpoint2[0]=nws[nws.length-1][0];
+		cpoint2[1]=parseInt(critical);
+		ct[0]=cpoint1;
+		ct[1]=cpoint2;
+		var series={
+				id: 1,
+				name:'Critical Temperature',
+				data: ct};
+		if(count==0){
+		  for(var i=0;i<stnSeries.length;i++){
+		    chart1.addSeries(stnSeries[i]);
+		    count++;
+		    }
+		  if(!critical==0){
+		  chart1.addSeries(series);
+		  }
+		}
+		else{
+			chart1.get(2).update({
+				data:fawn
+				});
+			
+			chart1.get(3).update({
+				data:nws
+				});
+			
+		}
+	}
+//private member function, display and compare the forecast temperature and station temperature 
+var fillTable=function(){
+		var row="";
+		var length=nws.length;
+		var table=document.getElementById("forecast");
+		var count=0;
+		var flag=0;
+		var rownum=1;
+		for(var i=0;i<length;i++){
+		if(nws[i][0]>fawn[fawn.length-1][0])
+		break;
+		for(var j=count;j<fawn.length;j++){
+		if(fawn[j][0]==nws[i][0]){
+		count=j;
+		flag=1;
+		break;
+		}}
+		if(flag==1){
+		flag=0;
+		var row=table.insertRow(rownum);
+		var cell1=row.insertCell(0);
+		var cell2=row.insertCell(1);
+		var cell3=row.insertCell(2);
+		var cell4=row.insertCell(3);
+		var cell5=row.insertCell(4);
+		var date=new Date(fawn[count][0]).toString();
+		var time=date.split(" ");
+		var timestr=time[1]+" "+time[2]+" "+time[3]+" "+time[4];
+		cell1.innerHTML=timestr;
+		cell2.innerHTML=fawn[count][1];
+		cell3.innerHTML=nws[i][1];; 
+		cell4.innerHTML=fawn[count][1]-nws[i][1];
+		cell5.innerHTML=count+" "+i;
+		cell5.style.display="none";
+		rownum++;
+		}
+		}
+		  var div=document.getElementById("forecastdiv"); 
+		  div.style.display="";  
+		}
+// initial a chart when page loading	
 this.intialChart=function()
 {
 	$(document).ready(function() {
@@ -46,55 +138,8 @@ this.intialChart=function()
 	 }
        });
  })
-}
-//After user choose one station, update the chart1
-var displayChart=function(){
-	newTitle="Forecast Date:"+forecastDate+", "+"Eff Date:"+effDate;
-	chart1.setTitle({text: newTitle});
-	var stnSeries =[{
-		id:2,
-	    name: 'FAWN Observation',
-	    data: fawn
-	 },
-	 {
-		 id:3,
-		 name: 'NWS Forecast',
-	    data: nws}];
-	var length=chart1.series.length;
-	var ct=[];;
-	var cpoint1=[];
-	var cpoint2=[];
-	cpoint1[0]=nws[0][0];;
-	cpoint1[1]=parseInt(critical);
-	cpoint2[0]=nws[nws.length-1][0];
-	cpoint2[1]=parseInt(critical);
-	ct[0]=cpoint1;
-	ct[1]=cpoint2;
-	var series={
-			id: 1,
-			name:'Critical Temperature',
-			data: ct};
-	if(count==0){
-	  for(var i=0;i<stnSeries.length;i++){
-	    chart1.addSeries(stnSeries[i]);
-	    count++;
-	    }
-	  if(!critical==0){
-	  chart1.addSeries(series);
-	  }
-	}
-	else{
-		chart1.get(2).update({
-			data:fawn
-			});
-		
-		chart1.get(3).update({
-			data:nws
-			});
-		
-	}
-	chart1.redraw();
 }	
+// request fawn data to the certain station the user choose
 this.fetchfawnData=function(){
 	var fawnurl='http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/'+$("#county").val();
     if ($.browser.msie && window.XDomainRequest) {
@@ -151,46 +196,8 @@ else{
 			}
    
 }
-var fillTable=function(){
-	var row="";
-	var length=nws.length;
-	var table=document.getElementById("forecast");
-	var count=0;
-	var flag=0;
-	var rownum=1;
-	for(var i=0;i<length;i++){
-	if(nws[i][0]>fawn[fawn.length-1][0])
-	break;
-	for(var j=count;j<fawn.length;j++){
-	if(fawn[j][0]==nws[i][0]){
-	count=j;
-	flag=1;
-	break;
-	}}
-	if(flag==1){
-	flag=0;
-	var row=table.insertRow(rownum);
-	var cell1=row.insertCell(0);
-	var cell2=row.insertCell(1);
-	var cell3=row.insertCell(2);
-	var cell4=row.insertCell(3);
-	var cell5=row.insertCell(4);
-	var date=new Date(fawn[count][0]).toString();
-	var time=date.split(" ");
-	var timestr=time[1]+" "+time[2]+" "+time[3]+" "+time[4];
-	cell1.innerHTML=timestr;
-	cell2.innerHTML=fawn[count][1];
-	cell3.innerHTML=nws[i][1];; 
-	cell4.innerHTML=fawn[count][1]-nws[i][1];
-	cell5.innerHTML=count+" "+i;
-	cell5.style.display="none";
-	rownum++;
-	}
-	}
-	  var div=document.getElementById("forecastdiv"); 
-	  div.style.display="";  
-	}
 
+//request nws data
 this.fetchforecastData=function(){
 	var nwsurl='http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/'+$("#county").val();
     if ($.browser.msie && window.XDomainRequest) {
@@ -271,6 +278,7 @@ else{
 			} 
 		
 }
+//After the user choose a critical data, add it to the chart
 this.displayCritical=function(){
 	critical=$("#critical").val();
 	if(nws.length!=0){
@@ -298,6 +306,7 @@ this.displayCritical=function(){
 	}
 	}
 }
+//after the user click a certain entry in the table, target the point in the chart.
 this.choose=function(){
     $("#forecast tr").click(function() {
         $.each($("#forecast tr"), function(i, n) {
