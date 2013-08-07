@@ -3,7 +3,7 @@
 <head>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script src="/js/highcharts.js"></script>
-<script src="/js/chart.js"></script>
+<script src="/js/temp.js"></script>
 <link type="text/css" rel="stylesheet" href="/stylesheet/bootstrap.min.css" />
 <link type="text/css" rel="stylesheet" href="/stylesheet/zhaostyle.css" />
 </head>
@@ -17,7 +17,7 @@
 </div>
 <div id="CriricalChoice" class="span3" style="padding-top: 30px;">
 <label>Critical Temperature:<label>
-<select id="critical" onchange=weaForecast.displayCritical();></select>
+<select id="critical" onchange=weaForecast.graphobj.displayCritical();></select>
 </div>
 </div>
 </div>
@@ -36,8 +36,8 @@
 </div>
 </div>
 <script>
-var weaForecast=new forecast();
-weaForecast.intialChart();
+var weaForecast=new forecastTracker();
+weaForecast.graphobj.intialChart();
 $.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
 			function(data) { 
 			var stnObj=data;
@@ -66,8 +66,11 @@ for(var i = 100; i>=0; i-- ) {
 }
 document.getElementById('critical').innerHTML = options;
 function fetchData(){
-weaForecast.fetchfawnData();
-weaForecast.fetchforecastData();
+var fawnurl = 'http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/' + $("#county").val();
+var nwsurl = 'http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/' + $("#county").val();
+weaForecast.data.fetchTempData("fawn",fawnurl);
+weaForecast.data.fetchTempData("nws",nwsurl);
+
 }
 </script>
 </body>
