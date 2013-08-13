@@ -1,3 +1,14 @@
+/* Author: Tiejia Zhao Email:tiejiazhao@gmail.com
+ * There are  three main functions in this file. forecastTracker is the main controller. In datacontrol, 
+ * formatDate formats the date suitable for different browser. ParseData parses the JSON into array
+ * for chart. fetchTempData requests the data from sever. In graphicChart, initcalChart creates a chart 
+ * for late use. There are also addSeries and updateSeries to update the series data when user chooses a
+ * station. setCritical and displayCritical are for drawing the critical temperature. In compareTable, 
+ * findComparePoint calculates the point fo nws and fawn have the save x value. InserTable inserts these
+ * point into a compare table. targetPoint refresh the tooltip after the user clicks a certain row in the
+ * table 
+ */
+
 function forecastTracker() {
     var graphchart;
     var xStart;
@@ -20,7 +31,7 @@ function dataControl() {
      * In IE, the data format should be normalize because IE is very restricted about the format.
      *
      */
-    var formatIEDate = function (dateStr,browerType) {
+    var formatDate = function (dateStr,browerType) {
     	if(browerType=="IE"){
         //2013-08-07 14:00:00 EDT
         var dateString = dateStr.split(" ");//[2013-08-07,14:00:00,EDT]
@@ -28,18 +39,19 @@ function dataControl() {
         var t = dateString[1].split(":");//[14,0,0]
         var date = new Date(d[0], (d[1] - 1), d[2], t[0], t[1], t[2]);// Wed Aug 7 17:00:00 EDT 2013
         //alert(date);
+    	}else{
+    		var date=new Date(dateStr);
     	}
-    	else
-    	var date=new Date(dateStr);
         return date;
     }
+    // parse Json into temperature series array
     var parseData = function (browserTyper,dataType,stnData){
     	if(dataType=="fawn"){
     	     for (var i = 0; i < stnData.length; i++) {
                  //parse JSON style:{"obz_temp":"82","local_time":"2013-08-07 17:00:00 EDT"} to highcart style: [1375902000000,82]
                  var temperPoint = [];
                  var dateStr = stnData[i].local_time; //"2013-07-18 10:00:00 EDT"
-                 var date = formatIEDate(dateStr,browserTyper);// format date for IE
+                 var date = formatDate(dateStr,browserTyper);// format date for IE
                  temperPoint[0] = date.getTime();
                  temperPoint[1] = parseInt(stnData[i].obz_temp);
                  fawn[i] = temperPoint;
@@ -50,18 +62,18 @@ function dataControl() {
     	else{
             forecastDate = stnData[0].local_fcst_time;
             effDate = stnData[0].local_eff_time; //forecastDate,effDate is used in chart title
-            var forecast = stnData[0].local_fcst_time;
-            var effforecast = formatIEDate(forecast,browserTyper);
+            var forecastStr = stnData[0].local_fcst_time;
+            var latestForecast = formatDate(forecastStr,browserTyper);
             //parse JSON style:{"fcst_temp":"90.1","local_fcst_time":"2013-08-07 12:00:00 EDT","local_eff_time":"2013-08-07 14:00:00 EDT"}
             //to highchart style:[1375902000000,90]
             for (var i = 0; i < stnData.length; i++) {        	
-                var fore = stnData[i].local_fcst_time;
-                var effcttime = formatIEDate(fore,browserTyper);//make the first forecast date as eff forecast date
-                if (effforecast.getTime() == effcttime.getTime())//Since there can be out of date forecast data, ignore these data
+                var foreStr = stnData[i].local_fcst_time;//display nws temperature in the latest forecast time
+                var forecast = formatDate(foreStr,browserTyper);//make the first forecast date as eff forecast date
+                if (latestForecast.getTime() == forecast.getTime())//Since there can be out of date forecast data, ignore these data
                 {
                     var temperPoint = [];
                     var dateStr = stnData[i].local_eff_time; //"2013-07-18 10:00:00 EDT"
-                    var date = formatIEDate(dateStr,browserTyper);          //format for IE
+                    var date = formatDate(dateStr,browserTyper);          //format for IE
                     temperPoint[0] = date.getTime();
                     temperPoint[1] = parseInt(stnData[i].fcst_temp);
                     nws[i] = temperPoint;
@@ -91,6 +103,7 @@ function dataControl() {
                     JSON = $.parseJSON(data.firstChild.textContent);
                 }
                 var stnData = JSON;
+                //parseData
                 parseData("IE",dataType,stnData)
                 //if series is already exist in the chart, update it, else add a new one       
                 if (graphchart.get(id))
