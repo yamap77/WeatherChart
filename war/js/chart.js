@@ -12,28 +12,74 @@ function dataControl() {
     var nws = [];
     var chart = new graphicChart();
     var table = new compareTable();
+    //series data
+    var seriesData;
+    //series id
+    var id;
     /*
      * In IE, the data format should be normalize because IE is very restricted about the format.
      *
      */
-    var formatIEDate = function (dateStr) {
+    var formatIEDate = function (dateStr,browerType) {
+    	if(browerType=="IE"){
         //2013-08-07 14:00:00 EDT
         var dateString = dateStr.split(" ");//[2013-08-07,14:00:00,EDT]
         var d = dateString[0].split("-");//[2013,08,07]
         var t = dateString[1].split(":");//[14,0,0]
         var date = new Date(d[0], (d[1] - 1), d[2], t[0], t[1], t[2]);// Wed Aug 7 17:00:00 EDT 2013
         //alert(date);
+    	}
+    	else
+    	var date=new Date(dateStr);
         return date;
+    }
+    var parseData = function (browserTyper,dataType,stnData){
+    	if(dataType=="fawn"){
+    	     for (var i = 0; i < stnData.length; i++) {
+                 //parse JSON style:{"obz_temp":"82","local_time":"2013-08-07 17:00:00 EDT"} to highcart style: [1375902000000,82]
+                 var temperPoint = [];
+                 var dateStr = stnData[i].local_time; //"2013-07-18 10:00:00 EDT"
+                 var date = formatIEDate(dateStr,browserTyper);// format date for IE
+                 temperPoint[0] = date.getTime();
+                 temperPoint[1] = parseInt(stnData[i].obz_temp);
+                 fawn[i] = temperPoint;
+             }
+    	     seriesData = fawn;
+             id = "fawn";
+    	}
+    	else{
+            forecastDate = stnData[0].local_fcst_time;
+            effDate = stnData[0].local_eff_time; //forecastDate,effDate is used in chart title
+            var forecast = stnData[0].local_fcst_time;
+            var effforecast = formatIEDate(forecast,browserTyper);
+            //parse JSON style:{"fcst_temp":"90.1","local_fcst_time":"2013-08-07 12:00:00 EDT","local_eff_time":"2013-08-07 14:00:00 EDT"}
+            //to highchart style:[1375902000000,90]
+            for (var i = 0; i < stnData.length; i++) {        	
+                var fore = stnData[i].local_fcst_time;
+                var effcttime = formatIEDate(fore,browserTyper);//make the first forecast date as eff forecast date
+                if (effforecast.getTime() == effcttime.getTime())//Since there can be out of date forecast data, ignore these data
+                {
+                    var temperPoint = [];
+                    var dateStr = stnData[i].local_eff_time; //"2013-07-18 10:00:00 EDT"
+                    var date = formatIEDate(dateStr,browserTyper);          //format for IE
+                    temperPoint[0] = date.getTime();
+                    temperPoint[1] = parseInt(stnData[i].fcst_temp);
+                    nws[i] = temperPoint;
+
+                }
+            }
+            //xStart and xEnd is used for the critical temperature since the nws is longer than fawn
+            xStart = nws[0][0];
+            xEnd = nws[nws.length - 1][0];
+            seriesData = nws;
+            id = "nws"; 		
+    	}
     }
     /*request temperature data to the certain station the user choose
      * dataType can be fawn, nws
      * IE and other browsers should be dealt with seperately
      */
     this.fetchTempData = function (dataType, url) {
-        //series data
-        var data;
-        //series id
-        var id;
         // if in IE browser
         if ($.browser.msie && window.XDomainRequest) {
             // Use Microsoft XDR
@@ -45,56 +91,15 @@ function dataControl() {
                     JSON = $.parseJSON(data.firstChild.textContent);
                 }
                 var stnData = JSON;
-                if (dataType == "fawn") {
-                    for (var i = 0; i < stnData.length; i++) {
-                        //parse JSON style:{"obz_temp":"82","local_time":"2013-08-07 17:00:00 EDT"} to highcart style: [1375902000000,82]
-                        var temperPoint = [];
-                        var dateStr = stnData[i].local_time; //"2013-07-18 10:00:00 EDT"
-                        var date = formatIEDate(dateStr);// format date for IE
-                        temperPoint[0] = date.getTime();
-                        temperPoint[1] = parseInt(stnData[i].obz_temp);
-                        fawn[i] = temperPoint;
-                    }
-                    data = fawn;
-                    id = 2;
-                }
-                else {
-                    forecastDate = stnData[0].local_fcst_time;
-                    effDate = stnData[0].local_eff_time; //forecastDate,effDate is used in chart title
-                    var forecast = stnData[0].local_fcst_time;
-                    var effforecast = formatIEDate(forecast);
-                    //parse JSON style:{"fcst_temp":"90.1","local_fcst_time":"2013-08-07 12:00:00 EDT","local_eff_time":"2013-08-07 14:00:00 EDT"}
-                    //to highchart style:[1375902000000,90]
-                    for (var i = 0; i < stnData.length; i++) {
-                        var fore = stnData[i].local_fcst_time;
-                        var effcttime = formatIEDate(fore);//make the first forecast date as eff forecast date
-                        if (effforecast.getTime() == effcttime.getTime())//Since there can be out of date forecast data, ignore these data
-                        {
-                            var temperPoint = [];
-                            var dateStr = stnData[i].local_eff_time; //"2013-07-18 10:00:00 EDT"
-                            var date = formatIEDate(dateStr);          //format for IE
-                            temperPoint[0] = date.getTime();
-                            temperPoint[1] = parseInt(stnData[i].fcst_temp);
-                            nws[i] = temperPoint;
-
-                        }
-                    }
-                    //xStart and xEnd is used for the critical temperature since the nws is longer than fawn
-                    xStart = nws[0][0];
-                    xEnd = nws[nws.length - 1][0];
-                    data = nws;
-                    id = 3;
-                }
-                //if series is already exist in the chart, update it, else add a new one
+                parseData("IE",dataType,stnData)
+                //if series is already exist in the chart, update it, else add a new one       
                 if (graphchart.get(id))
-                    chart.updateSeries(data, id);
+                    chart.updateSeries(seriesData, id);
                 else
-                    chart.addSeries(data, id);
+                    chart.addSeries(seriesData, id);
                 //if nws and fawn are both requested successfully, update the compare table
                 if (nws.length != 0 && fawn.length != 0)
                     table.inserTable(fawn, nws);
-
-
             };
             xdr.onprogress = function () {
             };
@@ -111,40 +116,12 @@ function dataControl() {
             $.getJSON(url,
                 function (data) {
                     var stnData = data;
-                    if (dataType == "fawn") {
-                        //parse JSON style:{"obz_temp":"82","local_time":"2013-08-07 17:00:00 EDT"} to highcart style: [1375902000000,82]
-                        for (var i = 0; i < stnData.length; i++) {
-                            var temperPoint = [];
-                            temperPoint[0] = (new Date(stnData[i].local_time)).getTime();
-                            temperPoint[1] = parseInt(stnData[i].obz_temp);
-                            fawn[i] = temperPoint;
-                        }
-                        data = fawn;
-                        id = 2;
-                    }
-                    else {
-                        forecastDate = stnData[0].local_fcst_time;
-                        effDate = stnData[0].local_eff_time; //forecastDate,effDate is used in chart title
-                        var effforecast = new Date(stnData[0].local_fcst_time).getTime();
-                        for (var i = 0; i < stnData.length; i++) {
-                            if (effforecast == (new Date(stnData[i].local_fcst_time).getTime())) {
-                                var temperPoint = [];
-                                var tempnws = [];
-                                temperPoint[0] = (new Date(stnData[i].local_eff_time)).getTime();
-                                temperPoint[1] = parseInt(stnData[i].fcst_temp);
-                                nws[i] = temperPoint;
-                            }
-                        }
-                        xStart = nws[0][0];
-                        xEnd = nws[nws.length - 1][0];
-                        data = nws;
-                        id = 3;
-                    }
-
+                    //alert(id+" "+dataType);
+                    parseData("other",dataType,stnData);
                     if (graphchart.get(id))
-                        chart.updateSeries(data, id);
+                        chart.updateSeries(seriesData, id);
                     else
-                        chart.addSeries(data, id);
+                        chart.addSeries(seriesData, id);
                     if (nws.length != 0 && fawn.length != 0)
                         table.inserTable(fawn, nws);
                 });
@@ -188,7 +165,7 @@ function graphicChart() {
      * If the user choose a different station, update the already existed series
      */
     this.updateSeries = function (data, id) {
-        if (id == 3) {
+        if (id == "nws") {
             newTitle = "Forecast Date:" + forecastDate + ", " + "Eff Date:" + effDate;
             graphchart.setTitle({text: newTitle});
         }
@@ -203,7 +180,7 @@ function graphicChart() {
     this.addSeries = function (data, id) {
         var stnSeries;
         //update fawn
-        if (id == 2) {
+        if (id == "fawn") {
             var name = 'FAWN Observation';
             var stnSeries = {
                 id: id,
@@ -213,7 +190,7 @@ function graphicChart() {
             }
         }
         //update nws
-        else if (id == 3) {
+        else if (id == "nws") {
             //when update nws, also update the title of the chart to display the forecast date and effect date
             newTitle = "Forecast Date:" + forecastDate + ", " + "Eff Date:" + effDate;
             graphchart.setTitle({text: newTitle});
@@ -227,7 +204,7 @@ function graphicChart() {
             if($("#critical").val()!=0){
             	var critical=setCritical();
             	var series = {
-                        id: 1,
+                        id: "critical",
                         color:'#FF0000',
                         name: 'Critical Temperature',
                         data: critical};
@@ -251,15 +228,16 @@ function graphicChart() {
  	
    }
     this.displayCritical = function () {
+    	var id="critical";
         if ($("#county").val() != "") {
         	var critical=setCritical();
             var series = {
-                id: 1,
+                id: id,
                 color:'#FF0000',
                 name: 'Critical Temperature',
                 data: critical};
-            if (graphchart.get(1) != null) {
-                graphchart.get(1).update({
+            if (graphchart.get(id) != null) {
+                graphchart.get(id).update({
                     data: critical
                 });
             }
@@ -327,7 +305,7 @@ function compareTable() {
         div.style.display = ""; //after insert, make the table visible.
 	}
     //After the user click a certain row in the table. It get the index of two compare point and refresh the tooltip.
-	this.chooseTable = function () {
+	this.targetPoint = function () {
         $("#forecast tr").click(function () {
             $.each($("#forecast tr"), function (i, n) {
                 $(n).removeClass("selected");
