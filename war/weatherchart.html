@@ -24,13 +24,17 @@
 <div id="container" class="span9"></div>
 <div id="forecastdiv" class="span6 scrollWrapper" style="padding-top: 30px;white-space:nowrap;font-size:14pt;display:none;"> 
 <table id="forecast" class="table table-bordered" style="font-size:70%" onclick=weaForecast.table.targetPoint(); >
+<thead>
    <tr>
     <th>Time</th>
     <th>NWS</th>
     <th>Fawn</th>
     <th>Diff</th>
-    <th style="display:none;">index</th>
-   </tr>  
+    <th style="display:none">index</th>
+   </tr> 
+   </thead>
+     <tbody id="tbody">
+    </tbody> 
 </table>
 </div>
 </div>
@@ -70,7 +74,6 @@ var fawnurl = 'http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/' + $
 var nwsurl = 'http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/' + $("#county").val();
 weaForecast.data.fetchTempData("fawn",fawnurl);
 weaForecast.data.fetchTempData("nws",nwsurl);
-
 }
 </script>
 </body>
