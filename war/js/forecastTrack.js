@@ -30,6 +30,7 @@ function forecastTracker() {
 
 function dataControl() {
 	//chart series data fawn and nws, format:[[1375902000000,81],[1375905600000,83]....]
+	var STATION_NAME_URL="http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/";
 	var fawn = [];
 	var nws = [];
 	var chart = new graphicChart();
@@ -177,7 +178,7 @@ function dataControl() {
 		if ($.browser.msie && window.XDomainRequest) {
 			// Use Microsoft XDR
 			var xdr = new XDomainRequest();
-			xdr.open("get", "http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/");
+			xdr.open("get", STATION_NAME_URL);
 			xdr.onload = function() {
 				var JSON = $.parseJSON(xdr.responseText);
 				if (!JSON) {
@@ -221,7 +222,7 @@ function dataControl() {
 			}, 0);
 
 		} else {
-		$.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
+		$.getJSON(STATION_NAME_URL,
 				function(data) {
 					var stnObj = data;
 					var stnIDs = Object.keys(stnObj); //get station ID list[110,120.....]
