@@ -173,6 +173,54 @@ function dataControl() {
 		}
 	}
 	this.fillSelectionBox = function() {
+		// if in IE browser
+		if ($.browser.msie && window.XDomainRequest) {
+			// Use Microsoft XDR
+			var xdr = new XDomainRequest();
+			xdr.open("get", "http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/");
+			xdr.onload = function() {
+				var JSON = $.parseJSON(xdr.responseText);
+				if (!JSON) {
+					alert("Currently has no station!")
+				}
+				var stnObj = JSON;
+				var stnIDs = Object.keys(stnObj); //get station ID list[110,120.....]
+				var stations = new Array(stnIDs.length);
+				for ( var i = 0; i < stnIDs.length; i++) {
+					var stnID = stnIDs[i];
+					var station = new Array();
+					station['stnName'] = stnObj[stnID].display_name;
+					station['stnID'] = stnID;
+					stations[i] = station;
+				}
+
+				stations.sort(function(a, b) {
+					return (a['stnName'] < b['stnName'] ? -1
+							: (a['stnName'] > b['stnName'] ? 1 : 0));
+				});
+				$("#county").append(
+						$('<option></option>').val("").html(
+								"Select Station"));
+				for ( var i = 0; i < stations.length; i++) {
+					$("#county").append(
+							$('<option></option>')
+									.val(stations[i]['stnID']).html(
+											stations[i]['stnName']));
+				}
+				$("#county").val(stations[0]['stnID']);
+				startLoadData();
+				};
+			xdr.onprogress = function() {
+			};
+			xdr.ontimeout = function() {
+			};
+			xdr.onerror = function() {
+			};
+			setTimeout(function() {
+				xdr.send();
+			}, 0);
+
+		} else {
 		$.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
 				function(data) {
 					var stnObj = data;
@@ -202,6 +250,7 @@ function dataControl() {
 					$("#county").val(stations[0]['stnID']);
 					startLoadData();
 				});
+		}
 		var options = "";
 		options += "<option value=" + 0 + ">Critical Temperature</option>"
 		for ( var i = 100; i >= 0; i--) {
@@ -211,8 +260,9 @@ function dataControl() {
 		document.getElementById('critical').innerHTML = options;
 		// window.setTimeout(fetchData,6000);
 
-	}
-}
+		}
+		}
+
 function graphicChart() {
 	var criticalTemp = 0;
 	//initial a graphic chart
