@@ -1,24 +1,30 @@
 /* Author: Tiejia Zhao Email:tiejiazhao@gmail.com
  * There are  three main functions in this file. forecastTracker is the main controller. In datacontrol, 
  * formatDate formats the date suitable for different browser. ParseData parses the JSON into array
- * for chart. fetchTempData requests the data from sever. In graphicChart, initcalChart creates a chart 
+ * for chart. TempData requests the data from sever. In graphicChart, initcalChart creates a chart 
  * for late use. There are also addSeries and updateSeries to update the series data when user chooses a
  * station. setCritical and displayCritical are for drawing the critical temperature. In compareTable, 
- * findComparePoint calculates the point fo nws and fawn have the save x value. InserTable inserts these
+ * findComparePoint calculates the point fo nws and fawn have the save x value. 
+ * FillTable inserts these
  * point into a compare table. targetPoint refresh the tooltip after the user clicks a certain row in the
  * table 
  */
 
 function forecastTracker() {
-	var graphchart;
+    //Graphic Chart
+	var graphChart;
+    //the start point of critical temperature (The date of the first nws forecast date)
 	var xStart;
-	var xEnd;
-	var forecastDate;
-	var effDate;
-	this.graphobj = new graphicChart();
-	this.data = new dataControl();
+    //the end point of critical temperature (The date of the last nws forecast date)
+    var xEnd;
+	var forecastDateTime;
+	var effDateTime;
+	this.graphObj = new graphicChart();
+	this.dataRequestObj = new dataControl();
 	this.table = new compareTable();
+
 }
+
 function dataControl() {
 	//chart series data fawn and nws, format:[[1375902000000,81],[1375905600000,83]....]
 	var fawn = [];
@@ -37,12 +43,15 @@ function dataControl() {
 		if (browerType == "IE") {
 			//2013-08-07 14:00:00 EDT
 			var dateString = dateStr.split(" ");//[2013-08-07,14:00:00,EDT]
-			var d = dateString[0].split("-");//[2013,08,07]
-			var t = dateString[1].split(":");//[14,0,0]
-			var dateStr = new Date(d[0], (d[1] - 1), d[2], t[0], t[1], t[2]).toString();
-			var dateTime=dateStr.split(" ");
-			var dateTemp=dateTime[0]+" "+dateTime[1]+" "+dateTime[2]+" "+dateTime[5]+" "+dateTime[3]+" "+dateString[2];// Wed Aug 7 2013 17:00:00 EDT
-			var date=new Date(dateTemp);
+			var dateArr = dateString[0].split("-");//[2013,08,07]
+			var timeArr = dateString[1].split(":");//[14,0,0]
+			var dateStr = new Date(dateArr[0], (dateArr[1] - 1), dateArr[2],
+					timeArr[0], timeArr[1], timeArr[2]).toString();
+			var dateTime = dateStr.split(" ");
+			var dateTemp = dateTime[0] + " " + dateTime[1] + " " + dateTime[2]
+					+ " " + dateTime[5] + " " + dateTime[3] + " "
+					+ dateString[2];// Wed Aug 7 2013 17:00:00 EDT
+			var date = new Date(dateTemp);
 			//alert(date);
 		} else {
 			var date = new Date(dateStr);
@@ -64,26 +73,28 @@ function dataControl() {
 			seriesData = fawn;
 			id = "fawn";
 		} else {
-		    //forecastDate =new Date(stnData[0].local_fcst_time).toString;
-			//effDate = new Date(stnData[0].local_eff_time).toString(); //forecastDate,effDate is used in chart title
-			var time  =formatDate(stnData[0].local_fcst_time, browserTyper).toString().split(" ");
-			forecastDate = time[1] + " " + time[2] + " " + time[3] + " "
-			+ time[4];
-			time=formatDate(stnData[0].local_eff_time, browserTyper).toString().split(" ");
-		    effDate = time[1] + " " + time[2] + " " + time[3] + " "
-			+ time[4]; //forecastDate,effDate is used in chart titl
+			//forecastDateTime,effDateTime is used in chart title
+			var time = formatDate(stnData[0].local_fcst_time, browserTyper)
+					.toString().split(" ");
+			forecastDateTime = time[1] + " " + time[2] + " " + time[3] + " "
+					+ time[4];
+			time = formatDate(stnData[0].local_eff_time, browserTyper)
+					.toString().split(" ");
+			effDateTime = time[1] + " " + time[2] + " " + time[3] + " " + time[4];
 			var forecastStr = stnData[0].local_fcst_time;
-			var latestForecastDate = formatDate(forecastStr, browserTyper);
+			var latestforecastDateTime = formatDate(forecastStr, browserTyper);
 			/*parse JSON style:{"fcst_temp":"90.1","local_fcst_time":"2013-08-07 12:00:00 EDT","local_eff_time":"2013-08-07 14:00:00 EDT"}
 			 * to highchart style:[1375902000000,90]
 			 * */
 			for ( var i = 0; i < stnData.length; i++) {
-				var forecastStr = stnData[i].local_fcst_time;//display nws temperature in the latest forecast time
-				var dateForecast = formatDate(forecastStr, browserTyper);//make the first forecast date as eff forecast date
-				if (latestForecastDate.getTime() == dateForecast.getTime())//Since there can be out of date forecast data, ignore these data
-				{
+				//display nws temperature in the latest forecast time
+				var forecastStr = stnData[i].local_fcst_time;
+				var dateForecast = formatDate(forecastStr, browserTyper);
+				//Since there can be out of date forecast data, ignore these data, make the first forecast date as eff forecast date
+				if (latestforecastDateTime.getTime() == dateForecast.getTime()) {
 					var temperPoint = [];
-					var dateStr = stnData[i].local_eff_time; //format: "2013-07-18 10:00:00 EDT"
+					//format: "2013-07-18 10:00:00 EDT"
+					var dateStr = stnData[i].local_eff_time;
 					var date = formatDate(dateStr, browserTyper);
 					temperPoint[0] = date.getTime();
 					temperPoint[1] = parseInt(stnData[i].fcst_temp);
@@ -116,13 +127,13 @@ function dataControl() {
 				//parseData
 				parseData("IE", dataType, stnData)
 				//if series is already exist in the chart, update it, else add a new one       
-				if (graphchart.get(id))
+				if (graphChart.get(id))
 					chart.updateSeries(seriesData, id);
 				else
 					chart.addSeries(seriesData, id);
 				//if nws and fawn are both requested successfully, update the compare table
 				if (nws.length != 0 && fawn.length != 0)
-					table.inserTable(fawn, nws);
+					table.fillTable(fawn, nws);
 			};
 			xdr.onprogress = function() {
 			};
@@ -139,80 +150,117 @@ function dataControl() {
 				var stnData = data;
 				//alert(id+" "+dataType);
 				parseData("Other", dataType, stnData);
-				if (graphchart.get(id)){
+				if (graphChart.get(id)) {
 					chart.updateSeries(seriesData, id);
-				}
-				else{
+				} else {
 					chart.addSeries(seriesData, id);
 				}
-				if (nws.length != 0 && fawn.length != 0){
-					table.inserTable(fawn, nws);
+				if (nws.length != 0 && fawn.length != 0) {
+					table.fillTable(fawn, nws);
 					fawn = [];
 					nws = [];
 				}
 			});
 		}
 	}
+	this.fillSelectionBox = function() {
+		$.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
+				function(data) {
+					var stnObj = data;
+					var stnIDs = Object.keys(stnObj); //get station ID list[110,120.....]
+					var stations = new Array(stnIDs.length);
+					for ( var i = 0; i < stnIDs.length; i++) {
+						var stnID = stnIDs[i];
+						var station = new Array();
+						station['stnName'] = stnObj[stnID].display_name;
+						station['stnID'] = stnID;
+						stations[i] = station;
+					}
+
+					stations.sort(function(a, b) {
+						return (a['stnName'] < b['stnName'] ? -1
+								: (a['stnName'] > b['stnName'] ? 1 : 0));
+					});
+					$("#county").append(
+							$('<option></option>').val("").html(
+									"Select Station"));
+					for ( var i = 0; i < stations.length; i++) {
+						$("#county").append(
+								$('<option></option>')
+										.val(stations[i]['stnID']).html(
+												stations[i]['stnName']));
+					}
+					$("#county").val(stations[0]['stnID']);
+					startLoadData();
+				});
+		var options = "";
+		options += "<option value=" + 0 + ">Critical Temperature</option>"
+		for ( var i = 100; i >= 0; i--) {
+			options += "<option value=" + i + ">" + i + "</option>";
+		}
+
+		document.getElementById('critical').innerHTML = options;
+		// window.setTimeout(fetchData,6000);
+
+	}
 }
 function graphicChart() {
 	var criticalTemp = 0;
-	this.intialChart = function() {
-		$(document)
-				.ready(
-						function() {
-						    Highcharts.setOptions({  // This is for all plots, change Date axis to local timezone
-				                global : {
-				                    useUTC : false
-				                }
-				            });
-							graphchart = new Highcharts.Chart(
-									{
-										chart : {
-											renderTo : 'container',
-											defaultSeriesType : 'line'
-										},
-										title : {
-											text : 'Please Select a FAWN Station to see the temperature chart'
-										},
-										tooltip : {
-											shared : true,
-											crosshairs : true
-										},
-										xAxis : {
-											type : 'datetime',
-											tickInterval : 4 * 3600 * 1000, // the interval is 4 hours
-											title : {
-												text : null
-											},
-											startOnTick : false
-										},
+	//initial a graphic chart
+	this.initialChart = function() {
+		$(document).ready(function() {
+			Highcharts.setOptions({ // This is for all plots, change Date axis to local timezone
+				global : {
+					useUTC : false
+				}
+			});
+			graphChart = new Highcharts.Chart({
+				chart : {
+					renderTo : 'chartcontainer',
+					defaultSeriesType : 'line'
+				},
+				title : {
+					text : ' '
+				},
+				tooltip : {
+					shared : true,
+					crosshairs : true
+				},
+				xAxis : {
+					type : 'datetime',
+					tickInterval : 4 * 3600 * 1000, // the interval is 4 hours
+					title : {
+						text : null
+					},
+					startOnTick : false
+				},
 
-										yAxis : {
-											title : {
-												text : 'F'
-											}
-										}
-									});
-						})
+				yAxis : {
+					title : {
+						text : 'F'
+					}
+				}
+			});
+		})
 	}
 	/*
 	 * If the user choose a different station, update the already existed series
 	 */
 	this.updateSeries = function(data, id) {
 		if (id == "nws") {
-			newTitle = "Forecast Date:" + forecastDate + ", " + "Eff Date:"
-					+ effDate;
-			graphchart.setTitle({
+			newTitle = "Forecast Date:" + forecastDateTime + ", " + "Eff Date:"
+					+ effDateTime;
+			graphChart.setTitle({
 				text : newTitle
 			});
 		}
-		graphchart.get(id).update({
+		graphChart.get(id).update({
 			data : data
 		});
 	}
 	/*
 	 * If it's the first time choosing a station, add new series to the chart
-	 * data type can be critical, fawn, nws, id is 1,2,3
+	 * data type can be critical, fawn, nws, id is "critical", "fawn","nws"
 	 */
 	this.addSeries = function(data, id) {
 		var stnSeries;
@@ -229,9 +277,9 @@ function graphicChart() {
 		//update nws
 		else if (id == "nws") {
 			//when update nws, also update the title of the chart to display the forecast date and effect date
-			newTitle = "Forecast Date:" + forecastDate + ", " + "Eff Date:"
-					+ effDate;
-			graphchart.setTitle({
+			newTitle = "Forecast Date:" + forecastDateTime + ", " + "Eff Date:"
+					+ effDateTime;
+			graphChart.setTitle({
 				text : newTitle
 			});
 			var name = 'NWS Forecast';
@@ -249,22 +297,25 @@ function graphicChart() {
 					name : 'Critical Temperature',
 					data : critical
 				};
-				graphchart.addSeries(series);
+				graphChart.addSeries(series);
 			}
 		}
-		graphchart.addSeries(stnSeries);
+		graphChart.addSeries(stnSeries);
 	}
 	var setCritical = function() {
 		var criticalTemp = $("#critical").val();
 		var critical = [];//critical data, start from nws start time and end with nws end time
 		var criticalStart = [];
 		var criticalEnd = [];
-		criticalStart[0] = xStart;//series start
+		//series start
+		criticalStart[0] = xStart;
 		criticalStart[1] = parseInt(criticalTemp);
-		criticalEnd[0] = xEnd;//series end
+		//series end
+		criticalEnd[0] = xEnd;
 		criticalEnd[1] = parseInt(criticalTemp);
+		//two points
 		critical[0] = criticalStart;
-		critical[1] = criticalEnd;//two points
+		critical[1] = criticalEnd;
 		return critical;
 
 	}
@@ -278,88 +329,84 @@ function graphicChart() {
 				name : 'Critical Temperature',
 				data : critical
 			};
-			if (graphchart.get(id) != null) {
-				graphchart.get(id).update({
+			if (graphChart.get(id) != null) {
+				graphChart.get(id).update({
 					data : critical
 				});
 			} else {
-				graphchart.addSeries(series);
+				graphChart.addSeries(series);
 			}
 		}
 	}
 }
+//display and compare the forecast temperature and station temperature
 function compareTable() {
-	//display and compare the forecast temperature and station temperature
-	
-	var findComparePoint = function(fawn, nws) {
-		var seriesIndex = [];
+	//find nws and fawn points with same datetime 
+	var findComparePoints = function(fawn, nws) {
+		var sameDateTimePoints = [];
 		var fawnindex = 0;
 		var flag = 0;// dicide if the compare point is found
-		var length = nws.length;
 		//nws has more point than fawn, so start from nws and find if there is a match point in fawn
-		for ( var i = 0; i < length; i++) {
-			if (nws[i][0] > fawn[fawn.length - 1][0])// if nws is beyoud the time range of fawn, there is no way to find a compare point,break
-				break;
-			for ( var j = fawnindex; j < fawn.length; j++)//start search from the last compare point 
-			{
-				//find the equeal time point and set flad to 1, break the loop
-				if (fawn[j][0] == nws[i][0]) {
-					fawnindex = j;
-					flag = 1;
-					break;
-				}
-			}
-			//If the compare point is found, store the index into seriesIndex
-			if (flag == 1) {
-				flag = 0;
-				var index = [];
-				index['fawnindex'] = fawnindex;
-				index['nwsindex'] = i;
-				seriesIndex[seriesIndex.length] = index;
+		var nwsHash={};
+		for(var i=0;i<nws.length;i++){
+			nwsHash[nws[i][0]]=i;
+		}
+		var count=0;
+		for(var j=0;j<fawn.length;j++){
+			if(nwsHash.hasOwnProperty(fawn[j][0])){
+				var index=[];
+				index['fawnindex']=j;
+				index['nwsindex']=nwsHash[fawn[j][0]];
+				sameDateTimePoints[count]=index;
+				count++;
 			}
 		}
-		return seriesIndex;
+		return sameDateTimePoints;
 	}
-	this.inserTable = function(fawn, nws) {		
+    
+	this.fillTable = function(fawn, nws) {
 		//alert(new Date());
-		var table = document.getElementById("forecast")
-		while(table.rows.length>1){
+		var table = document.getElementById("forecast");
+		//delete the old data in the table
+		while (table.rows.length > 1) {
 			table.deleteRow(1);
 		}
-		var index = findComparePoint(fawn, nws);
-		var rownum = 1;
+		var dateTimePoints = findComparePoints(fawn, nws);
 		//Each row has 5 cells, date cell,fawn temper cell, nws temper cell, diff cell and a hidden cell which store the index of each temper.
-		for ( var i = 0; i < index.length; i++) {
-			var row = table.insertRow(rownum);
-			var timeCell = row.insertCell(0);
-			var fawnCell = row.insertCell(1);
-			var nwsCell = row.insertCell(2);
-			var diffCell = row.insertCell(3);
-			var positionCell = row.insertCell(4);
-			var localDate = new Date(fawn[index[i].fawnindex][0]).toString();//date format is Wed Aug 07 2013 17:00:00 GMT-0400 (EDT), to make it short, just keep date and time.
-			//alert(localDate);
-			
-			var time = localDate.split(" ");// format the date string
-			var timestr = time[1] + " " + time[2] + " " + time[3] + " "
-					+ time[4];//Aug 07 2013 17:00:00
-			timeCell.innerHTML = timestr;
-			//alert(timestr);
-			fawnCell.innerHTML = fawn[index[i].fawnindex][1]; //fawn temperature
-			nwsCell.innerHTML = nws[index[i].nwsindex][1]; //nws temperature
-			diffCell.innerHTML = fawn[index[i].fawnindex][1]
-					- nws[index[i].nwsindex][1];// calculate the difference of fawn and nws
-			positionCell.innerHTML = index[i].fawnindex + " "
-					+ index[i].nwsindex; //store the index of the point in fawn and nws which is used to target the point in chart when the user click a certain row
-			positionCell.style.display = "none"; //make it hidden
-			rownum++;
+		for ( var i = 0; i < dateTimePoints.length; i++) {
+			//to make it short, just keep date and time.
+			var localDate = new Date(fawn[dateTimePoints[i].fawnindex][0])
+					.toString();
+			var timeStr = shortDataStr(localDate);
+			var fawnTemperature = fawn[dateTimePoints[i].fawnindex][1];
+			var nwsTemperature = nws[dateTimePoints[i].nwsindex][1];
+			var diff = fawnTemperature - nwsTemperature;
+			//Store the nws and fawn indexes of the compare points in a hidden field
+			var positionInSeries = dateTimePoints[i].fawnindex + " "
+					+ dateTimePoints[i].nwsindex;
+			var rowcontend = '<tr><td>' + timeStr + '</td>' + '<td>'
+					+ fawnTemperature + '</td>' + '<td>' + nwsTemperature
+					+ '</td>' + '<td>' + diff + '</td>' + '<td class="index">'
+					+ positionInSeries + '</td></tr>';
+			$("#forecast").append(rowcontend);
 		}
-		var div = document.getElementById("forecastdiv");
-	    div.style.display = ""; //after insert, make the table visible.	    
+		//the 5th is the hidden field
+		$("#forecast td:nth-child(5),th:nth-child(5)").hide();
+		$("#forecast").show();
+	}
+	var shortDataStr=function(dataStr){
+		//format the date string,date format is Wed Aug 07 2013 17:00:00 GMT-0400 (EDT), 
+		var time = dataStr.split(" ");
+		//After format Aug 07 2013 17:00:00
+		var dateTime = time[1] + " " + time[2] + " " + time[3] + " "
+				+ time[4];
+		return dateTime;
+		
 	}
 	//After the user click a certain row in the table. It get the index of two compare point and refresh the tooltip.
 	this.targetPoint = function() {
-		var fawn="fawn";
-		var nws="nws";
+		var fawn = "fawn";
+		var nws = "nws";
 		$("#forecast tr")
 				.click(
 						function() {
@@ -371,15 +418,24 @@ function compareTable() {
 							var table = document.getElementById("forecast");
 							//get the fawn index and nws index hidden in the table
 							var col = table.rows[index].cells[4].innerHTML;
-							var dataIndex = col.split(" ");
+							//[A,B],A is the position of fawn, B is the postion of nws
+							var comparePoint = col.split(" ");
 							if (index >= 1) {
-								graphchart.tooltip
+								graphChart.tooltip
 										.refresh([
-												graphchart.get(fawn).data[parseInt(dataIndex[0])],
-												graphchart.get(nws).data[parseInt(dataIndex[1])] ]);
+												graphChart.get(fawn).data[parseInt(comparePoint[0])],
+												graphChart.get(nws).data[parseInt(comparePoint[1])] ]);
 
 							}
 						});
 	}
 
+}
+function startLoadData() {
+	var fawnurl = 'http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/'
+			+ $("#county").val();
+	var nwsurl = 'http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/'
+			+ $("#county").val();
+	weatherForecast.dataRequestObj.fetchTempData("fawn", fawnurl);
+	weatherForecast.dataRequestObj.fetchTempData("nws", nwsurl);
 }

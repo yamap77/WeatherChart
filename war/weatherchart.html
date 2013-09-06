@@ -1,80 +1,51 @@
 <!doctype html>
 <html>
 <head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-<script src="/js/highcharts.js"></script>
-<script src="/js/chart.js"></script>
-<link type="text/css" rel="stylesheet" href="/stylesheet/bootstrap.min.css" />
-<link type="text/css" rel="stylesheet" href="/stylesheet/zhaostyle.css" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="/js/highcharts.js"></script>
+    <script src="/js/chart.js"></script>
+    <link type="text/css" rel="stylesheet" href="/stylesheet/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="/stylesheet/tableStyle.css"/>
 </head>
 <body>
 <div class="span12">
-<div class="row">
-<div id="stationChoice" class="span3" style="padding-top: 30px;">
-<label>Fawn Station:<label>
-<select id="county" onchange=fetchData();> 
-</select>
+    <div class="row">
+        <!--FAWN station drop down list-->
+        <div id="stationchoice" class="span3" style="padding-top: 30px;">
+            <label>Fawn Station:<label>
+                <select id="county" onchange=startLoadData();>
+                </select>
+        </div>
+        <!--Critical Temperature-->
+        <div id="criticalchoice" class="span3" style="padding-top: 30px;">
+            <label>Critical Temperature:<label>
+                <select id="critical" onchange=weatherForecast.graphObj.displayCritical();></select>
+        </div>
+    </div>
 </div>
-<div id="CriricalChoice" class="span3" style="padding-top: 30px;">
-<label>Critical Temperature:<label>
-<select id="critical" onchange=weaForecast.graphobj.displayCritical();></select>
-</div>
-</div>
-</div>
-<div id="container" class="span9"></div>
-<div id="forecastdiv" class="span6 scrollWrapper" style="padding-top: 30px;white-space:nowrap;font-size:14pt;display:none;"> 
-<table id="forecast" class="table table-bordered" style="font-size:70%" onclick=weaForecast.table.targetPoint(); >
-<thead>
-   <tr>
-    <th>Time</th>
-    <th>NWS</th>
-    <th>Fawn</th>
-    <th>Diff</th>
-    <th style="display:none">index</th>
-   </tr> 
-   </thead>
-     <tbody id="tbody">
-    </tbody> 
-</table>
-</div>
-</div>
-</div>
+
+<!--The container used to render the chart-->
+<div id="chartcontainer" class="span9"></div>
+
+<!--compare table-->
+<div id="forecastdiv" class="span6 scrollWrapper"
+     style="padding-top: 30px;white-space:nowrap;font-size:14pt;">
+    <table id="forecast" class="table table-bordered" style="font-size:70%;display:none;"
+           onclick=weatherForecast.table.targetPoint();>
+        <tr>
+            <th>Time</th>
+            <th>NWS</th>
+            <th>Fawn</th>
+            <th>Diff</th>
+            <th>index</th>
+        </tr>
+
+    </table>
+</div><!--table end-->
 <script>
-var weaForecast=new forecastTracker();
-weaForecast.graphobj.intialChart();
-$.getJSON('http://test.fawn.ifas.ufl.edu/controller.php/stationsJson/',
-			function(data) { 
-			var stnObj=data;
-			  var keys = [];
-			  var i=0;
-    keys=Object.keys(stnObj); // ['key1', 'key2', 'key3', 'key4']
-    var station=[];
-    for(var i=0;i<keys.length;i++){
-    var temp=[];
-    var key1=keys[i];
-    temp[0]=stnObj[key1].display_name;
-    temp[1]=key1;
-    station[i]=temp;}
-    station.sort(function(a, b) { return (a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0)); });
-   var stations ="";
-   stations += "<option value="+""+">Select Station</option>";
-   for(var i=0;i<station.length;i++){
-    stations += "<option value="+station[i][1]+">"+station[i][0]+"</option>";
-    }
-document.getElementById('county').innerHTML = stations;
-			}); 
-var options = "";
-options += "<option value="+0+">Critical Temperature</option>"
-for(var i = 100; i>=0; i-- ) {
-    options += "<option value="+i+">"+i+"</option>";
-}
-document.getElementById('critical').innerHTML = options;
-function fetchData(){
-var fawnurl = 'http://test.fawn.ifas.ufl.edu/controller.php/fawnByStn/json/' + $("#county").val();
-var nwsurl = 'http://test.fawn.ifas.ufl.edu/controller.php/forecastByStn/json/' + $("#county").val();
-weaForecast.data.fetchTempData("fawn",fawnurl);
-weaForecast.data.fetchTempData("nws",nwsurl);
-}
+    var weatherForecast = new forecastTracker();
+    weatherForecast.graphObj.initialChart();
+    weatherForecast.dataRequestObj.fillSelectionBox();
 </script>
 </body>
 </html>
