@@ -9,6 +9,6 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 		<servlet-class>com.fawn.weatherchart.WeatherChartServlet</servlet-class>
 	</servlet>
 	<welcome-file-list>
-		<welcome-file>weatherchart.html</welcome-file>
+		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 </web-app>

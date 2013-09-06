@@ -1,13 +1,16 @@
 /* Author: Tiejia Zhao Email:tiejiazhao@gmail.com
- * There are  three main functions in this file. forecastTracker is the main controller. In datacontrol, 
- * formatDate formats the date suitable for different browser. ParseData parses the JSON into array
- * for chart. TempData requests the data from sever. In graphicChart, initcalChart creates a chart 
+ * There are  three main functions in this file. 
+ * ForecastTracker is the main controller to deal with the user's request
+ * 
+ * In datacontrol, formatDate formats the date suitable for different browser. ParseData parses the JSON into array
+ * for chart. TempData requests the data from sever. 
+ * 
+ * In graphicChart, initcalChart creates a chart 
  * for late use. There are also addSeries and updateSeries to update the series data when user chooses a
- * station. setCritical and displayCritical are for drawing the critical temperature. In compareTable, 
- * findComparePoint calculates the point fo nws and fawn have the save x value. 
- * FillTable inserts these
- * point into a compare table. targetPoint refresh the tooltip after the user clicks a certain row in the
- * table 
+ * station. setCritical and displayCritical are for drawing the critical temperature. 
+ * 
+ * In compareTable, findComparePoint calculates the point fo nws and fawn have the save x value. 
+ * FillTable inserts these points into a compare table. targetPoint refresh the tooltip after the user clicks a certain row in the table. 
  */
 
 function forecastTracker() {
