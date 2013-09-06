@@ -120,10 +120,11 @@ function dataControl() {
 			xdr.open("get", url);
 			xdr.onload = function() {
 				var JSON = $.parseJSON(xdr.responseText);
-				if (JSON == null || typeof (JSON) == 'undefined') {
-					JSON = $.parseJSON(data.firstChild.textContent);
+				if (!JSON == null) {
+					alert("Currently has no data!")
 				}
-				var stnData = JSON;
+				if(JSON.hasOwnProperty('data')){
+				var stnData = JSON.data;
 				//parseData
 				parseData("IE", dataType, stnData)
 				//if series is already exist in the chart, update it, else add a new one       
@@ -134,7 +135,7 @@ function dataControl() {
 				//if nws and fawn are both requested successfully, update the compare table
 				if (nws.length != 0 && fawn.length != 0)
 					table.fillTable(fawn, nws);
-			};
+			}};
 			xdr.onprogress = function() {
 			};
 			xdr.ontimeout = function() {
@@ -147,7 +148,11 @@ function dataControl() {
 
 		} else {
 			$.getJSON(url, function(data) {
-				var stnData = data;
+				if(!data){
+					alert("Currently has no data!");
+				}
+				if(data.hasOwnProperty('data')){
+				var stnData = data.data;
 				//alert(id+" "+dataType);
 				parseData("Other", dataType, stnData);
 				if (graphChart.get(id)) {
@@ -159,6 +164,7 @@ function dataControl() {
 					table.fillTable(fawn, nws);
 					fawn = [];
 					nws = [];
+				}
 				}
 			});
 		}
