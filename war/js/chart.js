@@ -120,7 +120,7 @@ function dataControl() {
 			xdr.open("get", url);
 			xdr.onload = function() {
 				var JSON = $.parseJSON(xdr.responseText);
-				if (!JSON == null) {
+				if (!JSON) {
 					alert("Currently has no data!")
 				}
 				if(JSON.hasOwnProperty('data')){
