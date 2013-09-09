@@ -3,7 +3,7 @@
 <head>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script src="http://code.highcharts.com/highcharts.js"></script>
-    <script src="/js/Fawn_ForecastTrackerChart.js"></script>
+    <script src="/js/FAWN_ForecastTrackerChart.js"></script>
     <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="/stylesheet/tableStyle.css"/>
 </head>
@@ -23,13 +23,11 @@
         </div>
     </div>
 </div>
-
+<div class="">
 <!--The container used to render the chart-->
-<div id="chartcontainer" class="span8"></div>
-
+<div id="chartcontainer" class=" chartContainer"></div>
 <!--compare table-->
-<div id="forecastdiv" class="span6 scrollWrapper"
-     style="padding-top: 30px;white-space:nowrap;font-size:14pt;">
+<div id="forecastdiv" class="tableWidth scrollWrapper" style="padding-top: 30px;white-space:nowrap;font-size:14pt;">
     <table id="forecast" class="table table-bordered" style="font-size:70%;display:none;"
            onclick=weatherForecast.table.targetPoint();>
         <tr>
@@ -42,6 +40,7 @@
 
     </table>
 </div><!--table end-->
+</div>
 <script>
     var weatherForecast = new forecastTracker();
     weatherForecast.graphObj.initialChart();

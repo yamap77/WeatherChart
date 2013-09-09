@@ -40,11 +40,16 @@ function dataControl() {
 	//series id
 	var id;
 	/*
-	 * In IE, the data format should be normalize because IE is very restricted about the format.
+	 * Diffrent Web browser has it's own format requirement of date string
 	 *
 	 */
 	var formatDate = function(dateStr, browerType) {
+		var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+		var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+		var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+		if ((is_chrome)&&(is_safari)) {is_safari=false;}
 		if (browerType == "IE") {
+			//alert("safari");
 			//2013-08-07 14:00:00 EDT
 			var dateString = dateStr.split(" ");//[2013-08-07,14:00:00,EDT]
 			var dateArr = dateString[0].split("-");//[2013,08,07]
@@ -57,8 +62,23 @@ function dataControl() {
 					+ dateString[2];// Wed Aug 7 2013 17:00:00 EDT
 			var date = new Date(dateTemp);
 			//alert(date);
-		} else {
+		}
+		else{
+			if(is_safari||is_firefox){
+				var dateString = dateStr.split(" ");//[2013-08-07,14:00:00,EDT]
+				var dateArr = dateString[0].split("-");//[2013,08,07]
+				var timeArr = dateString[1].split(":");//[14,0,0]
+				var dateStr = new Date(dateArr[0], (dateArr[1] - 1), dateArr[2],
+						timeArr[0], timeArr[1], timeArr[2]).toString();
+				var dateTime = dateStr.split(" ");//"Sun Sep 08 2013 10:00:00 GMT-0400 (EDT)"
+				var dateTemp = dateTime[0] + " " + dateTime[1] + " " + dateTime[2]
+						+ " " + dateTime[3] + " " + dateTime[4] + " "
+						+ dateTime[5];// Wed Aug 7 2013 17:00:00 EDT
+				var date = new Date(dateTemp);			
+			}
+			else{
 			var date = new Date(dateStr);
+			}
 		}
 		return date;
 	}
