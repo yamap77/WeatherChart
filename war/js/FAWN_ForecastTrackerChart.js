@@ -272,13 +272,14 @@ function dataControl() {
 					startLoadData();
 				});
 		}
-		var options = "";
-		options += "<option value=" + 0 + ">Critical Temperature</option>"
+		$("#critical").append(
+				$('<option></option>').val("").html(
+						"Critical Temperature"));
 		for ( var i = 100; i >= 0; i--) {
-			options += "<option value=" + i + ">" + i + "</option>";
+			$("#critical").append(
+					$('<option></option>').val(i).html(
+							i));
 		}
-
-		document.getElementById('critical').innerHTML = options;
 		// window.setTimeout(fetchData,6000);
 
 		}
